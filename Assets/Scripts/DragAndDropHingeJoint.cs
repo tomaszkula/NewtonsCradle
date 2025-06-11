@@ -1,10 +1,10 @@
 using UnityEngine;
 
+[RequireComponent(typeof(HingeJoint))]
 public class DragAndDropHingeJoint : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private bool usePhysics = false;
-    [SerializeField] private float speed = 1f;
+    [SerializeField] private float springForce = 100000f;
 
     private bool isDragging = false;
     private Vector3 mousePositionOffset = Vector3.zero;
@@ -26,9 +26,16 @@ public class DragAndDropHingeJoint : MonoBehaviour
         Vector3 basePosition = transform.TransformPoint(hingeJoint.anchor);
         Vector3 direction = endPosition - basePosition;
 
+        (float min, float max) limits =
+            hingeJoint.useLimits
+            ? (hingeJoint.limits.min, hingeJoint.limits.max)
+            : (-180f, 180f);
+
         JointSpring spring = hingeJoint.spring;
-        spring.spring = 100000;
-        spring.targetPosition = Vector3.SignedAngle(Vector3.down, direction, Vector3.forward);
+        spring.spring = springForce;
+        float targetPosition = Vector3.SignedAngle(Vector3.down, direction, Vector3.forward);
+        targetPosition = Mathf.Clamp(targetPosition, limits.min, limits.max);
+        spring.targetPosition = targetPosition;
         hingeJoint.spring = spring;
     }
 
